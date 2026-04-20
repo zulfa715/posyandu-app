@@ -15,7 +15,7 @@ function Immunization({ childId, childName, onClose }) {
 
   const fetchImmunizations = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/immunizations');
+      const response = await axios.get('https://zealous-compassion.railway.app/api/immunizations');
       setImmunizations(response.data.data);
     } catch (error) {
       console.error('Gagal ambil data imunisasi:', error);
@@ -25,7 +25,7 @@ function Immunization({ childId, childName, onClose }) {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/child-immunizations/${childId}`);
+      const response = await axios.get(`https://zealous-compassion.railway.app/api/child-immunizations/${childId}`);
       setHistory(response.data.data);
     } catch (error) {
       console.error('Gagal ambil riwayat:', error);
@@ -41,7 +41,7 @@ function Immunization({ childId, childName, onClose }) {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/child-immunizations', {
+      await axios.post('https://zealous-compassion.railway.app/api/child-immunizations', {
         child_id: childId,
         immunization_id: selectedVaccine,
         given_date: givenDate,
@@ -59,7 +59,7 @@ function Immunization({ childId, childName, onClose }) {
   const handleDelete = async (id) => {
     if (window.confirm('Hapus riwayat imunisasi ini?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/child-immunizations/${id}`);
+        await axios.delete(`https://zealous-compassion.railway.app/api/child-immunizations/${id}`);
         alert('Berhasil dihapus!');
         fetchHistory();
       } catch (error) {

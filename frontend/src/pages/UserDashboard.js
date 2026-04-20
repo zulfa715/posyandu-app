@@ -20,7 +20,7 @@ function UserDashboard() {
   const fetchMyChildren = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/children/by-parent/${user.phone}`);
+      const response = await axios.get(`https://zealous-compassion.railway.app/api/children/by-parent/${user.phone}`);
       setChildren(response.data.children);
     } catch (error) {
       console.error('Gagal ambil data:', error);
@@ -31,7 +31,7 @@ function UserDashboard() {
 
   const fetchGrowthData = async (childId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/growth/${childId}`);
+      const response = await axios.get(`https://zealous-compassion.railway.app/api/growth/${childId}`);
       const records = response.data.records;
       const dates = records.map(r => r.visit_date);
       const weights = records.map(r => r.weight_kg);

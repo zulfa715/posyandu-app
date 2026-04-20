@@ -22,8 +22,8 @@ function Education() {
   const fetchArticles = async () => {
     try {
       const url = selectedCategory === 'all' 
-        ? 'http://localhost:5000/api/educations'
-        : `http://localhost:5000/api/educations/category/${selectedCategory}`;
+        ? 'https://zealous-compassion.railway.app/api/educations'
+        : `https://zealous-compassion.railway.app/api/educations/category/${selectedCategory}`;
       const response = await axios.get(url);
       setArticles(response.data.data);
     } catch (error) {
@@ -42,7 +42,7 @@ function Education() {
   const handleAddArticle = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/educations', newArticle);
+      await axios.post('https://zealous-compassion.railway.app/api/educations', newArticle);
       alert('Artikel berhasil ditambahkan!');
       setShowForm(false);
       setNewArticle({ title: '', content: '', category: 'Gizi', video_url: '' });
@@ -55,7 +55,7 @@ function Education() {
   const handleDelete = async (id, title) => {
     if (window.confirm(`Hapus "${title}"?`)) {
       try {
-        await axios.delete(`http://localhost:5000/api/educations/${id}`);
+        await axios.delete(`https://zealous-compassion.railway.app/api/educations/${id}`);
         alert('Artikel dihapus!');
         fetchArticles();
       } catch (error) {

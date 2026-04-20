@@ -3,7 +3,6 @@ import axios from 'axios';
 import GrowthChart from '../components/GrowthChart';
 import Education from '../components/Education';
 import ExportPDF from '../components/ExportPDF';
-import Immunization from '../components/Immunization';
 
 function Dashboard() {
   const [children, setChildren] = useState([]);
@@ -12,8 +11,6 @@ function Dashboard() {
   const [growthData, setGrowthData] = useState({ dates: [], weights: [], heights: [] });
   const [showChart, setShowChart] = useState(false);
   const [activeTab, setActiveTab] = useState('children');
-  const [showImmunization, setShowImmunization] = useState(false);
-  const [selectedChildForImmunization, setSelectedChildForImmunization] = useState(null);
   const [newChild, setNewChild] = useState({
     name: '',
     birth_date: '',
@@ -29,7 +26,7 @@ function Dashboard() {
 
   const fetchChildren = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/children');
+      const response = await axios.get('https://zealous-compassion.railway.app/api/children');
       setChildren(response.data.children);
     } catch (error) {
       console.error('Gagal ambil data:', error);
@@ -38,7 +35,7 @@ function Dashboard() {
 
   const fetchGrowthData = async (childId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/growth/${childId}`);
+      const response = await axios.get(`https://zealous-compassion.railway.app/api/growth/${childId}`);
       const records = response.data.records;
       const dates = records.map(r => r.visit_date);
       const weights = records.map(r => r.weight_kg);
@@ -55,11 +52,6 @@ function Dashboard() {
     await fetchGrowthData(child.id);
   };
 
-  const handleImmunization = (child) => {
-    setSelectedChildForImmunization(child);
-    setShowImmunization(true);
-  };
-
   const handleInputChange = (e) => {
     setNewChild({ ...newChild, [e.target.name]: e.target.value });
   };
@@ -67,7 +59,7 @@ function Dashboard() {
   const handleAddChild = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/children', newChild);
+      await axios.post('https://zealous-compassion.railway.app/api/children', newChild);
       alert('Balita berhasil ditambahkan!');
       setShowForm(false);
       setNewChild({ name: '', birth_date: '', gender: 'L', parent_phone: '' });
@@ -82,7 +74,7 @@ function Dashboard() {
     const height = prompt('Masukkan tinggi badan (cm):');
     if (weight && height) {
       try {
-        await axios.post('http://localhost:5000/api/growth-records', {
+        await axios.post('https://zealous-compassion.railway.app/api/growth-records', {
           child_id: childId,
           weight_kg: parseFloat(weight),
           height_cm: parseFloat(height)
@@ -99,7 +91,7 @@ function Dashboard() {
     const confirm = window.confirm(`Hapus ${childName}? Semua data pemeriksaan akan ikut terhapus.`);
     if (!confirm) return;
     try {
-      await axios.delete(`http://localhost:5000/api/children/${childId}`);
+      await axios.delete(`https://zealous-compassion.railway.app/api/children/${childId}`);
       alert(`${childName} berhasil dihapus!`);
       fetchChildren();
     } catch (error) {
@@ -227,7 +219,6 @@ function Dashboard() {
                         <button onClick={() => handleInputWeight(child.id)} style={{ backgroundColor: '#4299e1', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>Input Pemeriksaan</button>
                         <button onClick={() => handleViewChart(child)} style={{ backgroundColor: '#f59e0b', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>📊 Grafik</button>
                         <button onClick={() => handleDeleteChild(child.id, child.name)} style={{ backgroundColor: '#e53e3e', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>🗑️ Hapus</button>
-                        <button onClick={() => handleImmunization(child)} style={{ backgroundColor: '#9b59b6', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>💉 Imunisasi</button>
                       </td>
                     </tr>
                   ))}
@@ -252,15 +243,6 @@ function Dashboard() {
             <GrowthChart growthData={growthData} childName={selectedChild.name} />
           </div>
         </div>
-      )}
-
-      {/* Modal Imunisasi */}
-      {showImmunization && selectedChildForImmunization && (
-        <Immunization 
-          childId={selectedChildForImmunization.id} 
-          childName={selectedChildForImmunization.name} 
-          onClose={() => setShowImmunization(false)} 
-        />
       )}
     </div>
   );

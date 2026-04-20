@@ -3,6 +3,7 @@ import axios from 'axios';
 import GrowthChart from '../components/GrowthChart';
 import Education from '../components/Education';
 import ExportPDF from '../components/ExportPDF';
+import Immunization from '../components/Immunization';
 
 function Dashboard() {
   const [children, setChildren] = useState([]);
@@ -11,6 +12,8 @@ function Dashboard() {
   const [growthData, setGrowthData] = useState({ dates: [], weights: [], heights: [] });
   const [showChart, setShowChart] = useState(false);
   const [activeTab, setActiveTab] = useState('children');
+  const [showImmunization, setShowImmunization] = useState(false);
+  const [selectedChildForImmunization, setSelectedChildForImmunization] = useState(null);
   const [newChild, setNewChild] = useState({
     name: '',
     birth_date: '',
@@ -50,6 +53,11 @@ function Dashboard() {
     setSelectedChild(child);
     setShowChart(true);
     await fetchGrowthData(child.id);
+  };
+
+  const handleImmunization = (child) => {
+    setSelectedChildForImmunization(child);
+    setShowImmunization(true);
   };
 
   const handleInputChange = (e) => {
@@ -219,6 +227,7 @@ function Dashboard() {
                         <button onClick={() => handleInputWeight(child.id)} style={{ backgroundColor: '#4299e1', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>Input Pemeriksaan</button>
                         <button onClick={() => handleViewChart(child)} style={{ backgroundColor: '#f59e0b', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>📊 Grafik</button>
                         <button onClick={() => handleDeleteChild(child.id, child.name)} style={{ backgroundColor: '#e53e3e', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>🗑️ Hapus</button>
+                        <button onClick={() => handleImmunization(child)} style={{ backgroundColor: '#9b59b6', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}>💉 Imunisasi</button>
                       </td>
                     </tr>
                   ))}
@@ -243,6 +252,15 @@ function Dashboard() {
             <GrowthChart growthData={growthData} childName={selectedChild.name} />
           </div>
         </div>
+      )}
+
+      {/* Modal Imunisasi */}
+      {showImmunization && selectedChildForImmunization && (
+        <Immunization 
+          childId={selectedChildForImmunization.id} 
+          childName={selectedChildForImmunization.name} 
+          onClose={() => setShowImmunization(false)} 
+        />
       )}
     </div>
   );

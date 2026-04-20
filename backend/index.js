@@ -53,6 +53,25 @@ db.serialize(() => {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabel master imunisasi
+    db.run(`CREATE TABLE IF NOT EXISTS immunizations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        due_month INTEGER NOT NULL,
+        description TEXT
+    )`);
+
+    // Tabel riwayat imunisasi balita
+    db.run(`CREATE TABLE IF NOT EXISTS child_immunizations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER,
+        immunization_id INTEGER,
+        given_date TEXT,
+        next_due_date TEXT,
+        status TEXT DEFAULT 'scheduled',
+        notes TEXT
+    )`);
+
     // Tabel jadwal posyandu (untuk notifikasi)
     db.run(`CREATE TABLE IF NOT EXISTS schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +95,26 @@ db.serialize(() => {
                 ('Jadwal Imunisasi Lengkap', 'Imunisasi dasar: BCG (0 bulan), DPT-HB-Hib (2,3,4 bulan), Polio (0,2,3,4 bulan), Campak (9 bulan). Lengkapi imunisasi anak tepat waktu.', 'Imunisasi')
             `);
             console.log('✅ Data edukasi contoh ditambahkan');
+        }
+    });
+
+    // Insert data imunisasi master jika kosong
+    db.get('SELECT COUNT(*) as count FROM immunizations', [], (err, row) => {
+        if (row && row.count === 0) {
+            db.run(`INSERT INTO immunizations (name, due_month, description) VALUES
+                ('BCG', 0, 'Vaksin untuk mencegah TBC, diberikan saat baru lahir'),
+                ('Hepatitis B', 0, 'Vaksin hepatitis B dosis 1, diberikan saat baru lahir'),
+                ('Polio 1', 2, 'Vaksin polio tetes dosis 1, usia 2 bulan'),
+                ('DPT-HB-Hib 1', 2, 'Vaksin DPT, Hepatitis B, Hib kombinasi dosis 1, usia 2 bulan'),
+                ('Polio 2', 3, 'Vaksin polio tetes dosis 2, usia 3 bulan'),
+                ('DPT-HB-Hib 2', 3, 'Vaksin DPT, Hepatitis B, Hib dosis 2, usia 3 bulan'),
+                ('Polio 3', 4, 'Vaksin polio tetes dosis 3, usia 4 bulan'),
+                ('DPT-HB-Hib 3', 4, 'Vaksin DPT, Hepatitis B, Hib dosis 3, usia 4 bulan'),
+                ('Campak Rubella', 9, 'Vaksin campak dan rubella, usia 9 bulan'),
+                ('DPT-HB-Hib Lanjutan', 18, 'Vaksin booster DPT, Hepatitis B, Hib, usia 18 bulan'),
+                ('Campak Rubella 2', 24, 'Booster campak rubella, usia 2 tahun')
+            `);
+            console.log('✅ Data imunisasi master ditambahkan');
         }
     });
 });
@@ -279,6 +318,53 @@ app.delete('/api/educations/:id', (req, res) => {
     });
 });
 
+// ============ IMUNISASI API ============
+
+// GET semua daftar imunisasi master
+app.get('/api/immunizations', (req, res) => {
+    db.all('SELECT * FROM immunizations ORDER BY due_month ASC', [], (err, rows) => {
+        if (err) return res.status(500).json({ success: false, message: err.message });
+        res.json({ success: true, data: rows });
+    });
+});
+
+// GET riwayat imunisasi balita
+app.get('/api/child-immunizations/:child_id', (req, res) => {
+    const { child_id } = req.params;
+    db.all(`
+        SELECT ci.*, i.name, i.due_month, i.description 
+        FROM child_immunizations ci
+        JOIN immunizations i ON ci.immunization_id = i.id
+        WHERE ci.child_id = ?
+        ORDER BY ci.given_date DESC
+    `, [child_id], (err, rows) => {
+        if (err) return res.status(500).json({ success: false, message: err.message });
+        res.json({ success: true, data: rows });
+    });
+});
+
+// POST tambah imunisasi untuk balita
+app.post('/api/child-immunizations', (req, res) => {
+    const { child_id, immunization_id, given_date, next_due_date, notes } = req.body;
+    db.run(
+        'INSERT INTO child_immunizations (child_id, immunization_id, given_date, next_due_date, status, notes) VALUES (?, ?, ?, ?, "completed", ?)',
+        [child_id, immunization_id, given_date, next_due_date, notes],
+        function(err) {
+            if (err) return res.status(500).json({ success: false, message: err.message });
+            res.json({ success: true, message: 'Imunisasi berhasil dicatat!', id: this.lastID });
+        }
+    );
+});
+
+// DELETE riwayat imunisasi
+app.delete('/api/child-immunizations/:id', (req, res) => {
+    const { id } = req.params;
+    db.run('DELETE FROM child_immunizations WHERE id = ?', [id], function(err) {
+        if (err) return res.status(500).json({ success: false, message: err.message });
+        res.json({ success: true, message: 'Riwayat imunisasi dihapus!' });
+    });
+});
+
 // ============ JADWAL & NOTIFIKASI API ============
 
 // GET semua jadwal
@@ -330,6 +416,10 @@ app.listen(port, () => {
     console.log('   GET    /api/educations');
     console.log('   POST   /api/educations');
     console.log('   DELETE /api/educations/:id');
+    console.log('   GET    /api/immunizations');
+    console.log('   GET    /api/child-immunizations/:child_id');
+    console.log('   POST   /api/child-immunizations');
+    console.log('   DELETE /api/child-immunizations/:id');
     console.log('   GET    /api/schedules');
     console.log('   POST   /api/schedules');
     console.log('   DELETE /api/schedules/:id');
